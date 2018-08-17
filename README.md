@@ -10,7 +10,7 @@ Uses [Vundle](https://github.com/VundleVim/Vundle.vim) as a plugin manager and c
 Refer to [Vundle](https://github.com/VundleVim/Vundle.vim) on how to install more plugins (its super easy)
 
 ### zsh
-Sets zsh to the default shell, and uses the [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh) zsh framework. Looks good, is more secure, and has some nice shortcuts.
+Sets zsh to the default shell, and uses the [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh) zsh framework. Looks good, is more secure, and has some nice features. Take a look at the cheatsheet [here](https://github.com/robbyrussell/oh-my-zsh/wiki/Cheatsheet).
 
 ### git 
 Just some per user specifications
