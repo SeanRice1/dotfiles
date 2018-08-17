@@ -10,7 +10,7 @@ Then run these commands...
  ```
  git clone --recurse-submodules https://github.com/SeanRice1/dotfiles ~/dotfiles
  cd ~/dotfiles
- python setup.py
+ ./setup.py
  chsh -s $(which zsh)
  vim +PluginInstall +qall
  ```
