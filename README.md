@@ -33,5 +33,4 @@ Then run these commands...
  ```
 Then logout and log back in! 
 
-
-Feel free to fork 
+When I get around to it, I will be adding dotfiles for VScode, linting, and others. Feel free to fork.
