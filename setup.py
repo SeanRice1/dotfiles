@@ -114,10 +114,13 @@ def setup():
     
 
 def main():
+    print("======================== Welcome to the dotfile configure-er ========================")
+    print("Commands: ")
     print("link - make sym links within ~/ for all dotfiles and submodules, pre appending a dot.")
     print("unlink - remove all symlinks from ~/ to any resources contained in this directory.")
     print("setup - run script to set up dotfile requirements and dependencies.")
     print("exit - exit the dotfile helper")
+    print("=====================================================================================")
     response = raw_input("What would you like to do? \n")
 
     while 1:
