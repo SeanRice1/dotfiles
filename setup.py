@@ -108,8 +108,8 @@ def unlink():
 
 
 def setup():
-    subprocess.Popen("chsh -s $(which zsh)")
-    subprocess.Popen("vim +PluginInstall +qall")
+    subprocess.call("chsh -s $(which zsh)", shell=True)
+    subprocess.call("vim +PluginInstall +qall", shell=True)
     print("Logout and log back in for changes to take effect!")
     
 
@@ -127,6 +127,8 @@ def main():
             setup()
         elif response.lower() == "link":
             link()
+        elif response.lower() == "unlink":
+            unlink()
         else:
             print("Valid options are link, unlink, setup and exit")
 
