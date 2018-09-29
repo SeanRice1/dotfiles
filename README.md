@@ -28,9 +28,7 @@ Then run these commands...
  git clone --recurse-submodules https://github.com/SeanRice1/dotfiles ~/dotfiles
  cd ~/dotfiles
  ./setup.py
- chsh -s $(which zsh)
- vim +PluginInstall +qall
  ```
-Then logout and log back in! 
+Then use the CLI to link, unlink and setup the dotfiles (and submodules)!
 
 When I get around to it, I will be adding dotfiles for VScode, linting, and others. Feel free to fork.
