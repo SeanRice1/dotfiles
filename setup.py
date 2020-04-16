@@ -40,16 +40,16 @@ def archive(dest):
             raise
         pass
     
-    print "Archiving %s to %s" % (dest, DOT_ARCHIVE + os.path.basename(dest))
+    print ("Archiving %s to %s" % (dest, DOT_ARCHIVE + os.path.basename(dest)))
     shutil.move(dest, DOT_ARCHIVE + os.path.basename(dest))
 
 
 def  link():
     for source_dir in SOURCES:
         if source_dir == SOURCE_DOTS:
-            print "Linking dotfiles to ~/ ..."
+            print ("Linking dotfiles to ~/ ...")
         else: 
-            print "Linking submodules to ~/ ..."
+            print ("Linking submodules to ~/ ...")
 
         os.chdir(os.path.expanduser(source_dir))
         for filename in [file for file in glob.glob('*') if file not in EXCLUDE]:
@@ -68,29 +68,29 @@ def  link():
                     if is_link_to(dotfile, source):
                         continue
 
-                    response = raw_input("Overwrite file `%s'? [y/N] " % dotfile)
+                    response = input("Overwrite file `%s'? [y/N] " % dotfile)
                     if not response.lower().startswith('y'):
-                        print "Skipping `%s'..." % dotfile
+                        print ("Skipping `%s'..." % dotfile)
                         continue
 
                     force_remove(dotfile)
                 else:
-                    response = raw_input("Archive `%s'? [y/N] " % dotfile)
+                    response = input("Archive `%s'? [y/N] " % dotfile)
                     if not response.lower().startswith('y'):
-                        print "Archiving `%s'..." % dotfile
+                        print ("Archiving `%s'..." % dotfile)
                         continue
 
                     archive(dotfile)
 
             os.symlink(source, dotfile)
-            print "%s => %s" % (dotfile, source)
+            print ("%s => %s" % (dotfile, source))
 
 def unlink():
     for source_dir in SOURCES:
         if source_dir == SOURCE_DOTS:
-            print "Removing symlinks to dotfiles in ~/ ..."
+            print ("Removing symlinks to dotfiles in ~/ ...")
         else: 
-            print "Removing symlinks to submodules in ~/ ..."
+            print ("Removing symlinks to submodules in ~/ ...")
 
         os.chdir(os.path.expanduser(source_dir))
         for filename in [file for file in glob.glob('*') if file not in EXCLUDE]:
@@ -129,7 +129,7 @@ def main():
     print("=====================================================================================")
 
     print("OS types: macOS, linux, windows")
-    response = raw_input("Set OS \n")
+    response = input("Set OS \n")
 
     if  response.lower() == "windows":
         print("Sorry windows is not supported yet. Quitting...")
@@ -140,7 +140,7 @@ def main():
     else:
         HOST_OS=response.lower()
 
-    response = raw_input("What would you like to do? \n")
+    response = input("What would you like to do? \n")
 
     while 1:
         if response.lower() == "exit":
@@ -152,7 +152,7 @@ def main():
         else:
             print("Valid options are unlink, setup and exit")
 
-        response = raw_input("Would you like to do anything else? If not, enter exit \n")
+        response = input("Would you like to do anything else? If not, enter exit \n")
 
 if __name__ == '__main__':
     main()
