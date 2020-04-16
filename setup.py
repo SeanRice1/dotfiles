@@ -128,7 +128,7 @@ def main():
     print("exit - exit the dotfile helper")
     print("=====================================================================================")
 
-    print("OS types: macOS, linux, windows"
+    print("OS types: macOS, linux, windows")
     response = raw_input("Set OS \n")
 
     if  response.lower() == "windows":
