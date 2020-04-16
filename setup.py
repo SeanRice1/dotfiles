@@ -130,11 +130,12 @@ def main():
 
     print("OS types: macOS, linux, windows")
     response = input("Set OS \n")
+    print("This is your OS: " + response.lower())
 
     if  response.lower() == "windows":
         print("Sorry windows is not supported yet. Quitting...")
         sys.exit(0)
-    elif response.lower() != "macos" or response.lower() != "linux":
+    elif response.lower() != "macos" and response.lower() != "linux":
         print("Unsupported OS. Qutting...")
         sys.exit(1)
     else:
