@@ -16,14 +16,14 @@ import pathlib
 
 
 HOME= os.path.expanduser('~')
-HOST_OS = None
-SOURCE_DOTS = HOME + '/dotfiles/dots'
-SOURCE_SUBS = HOME + '/dotfiles/subs'
+SOURCE_DOTS = pathlib.Path(HOME, 'dotfiles/dots')
+SOURCE_SUBS = pathlib.Path(HOME, 'dotfiles/subs')
 SOURCES = [SOURCE_DOTS, SOURCE_SUBS]
-DOT_ARCHIVE = HOME + '/.dotArchive/'
+DOT_ARCHIVE = pathlib.Path(HOME, '.dotArchive/')
 EXCLUDE = [".git", ".gitignore", ".gitmodules"]
 NO_DOT_PREFIX = []
 PRESERVE_EXTENSION = []
+HOST_OS = None
 
 
 def force_remove(path):
@@ -39,91 +39,97 @@ def is_link_to(link, dest):
     return is_link
 
 
-def archive(dest):
-    try:
-        os.mkdir(DOT_ARCHIVE)
-    except OSError as exc:
-        if exc.errno != errno.EEXIST:
-            raise
-        pass
-    
-    print ("Archiving %s to %s" % (dest, DOT_ARCHIVE + os.path.basename(dest)))
-    shutil.move(dest, DOT_ARCHIVE + os.path.basename(dest))
+def archive(path):
+    DOT_ARCHIVE.mkdir(exist_ok=True)
+    archived_path = pathlib.Path(DOT_ARCHIVE, path.name) 
+    print ("Archiving %s to %s" % (path, archived_path))
+    shutil.move(path, archived_path)
+
+def _add_dot(path):
+    if filename not in NO_DOT_PREFIX:
+        return pathlib.Path(path.parent, "." + path.name)
+    else:
+        return path
+
+def _safe_link(source_path, dest_path):
+    if dest_path.exists():
+        # Path exists, and its a sym link
+        if os.path.islink(dest_path):
+            if is_link_to(dest_path, source_path):
+                # Its a sym link created by this program, already linked
+                return
+             
+            response = input("Overwrite symbolic link for '%s'? [y/N] " % dest_path)
+            if response.lower().startswith('y'):
+                # Remove sym link in HOME dir
+                force_remove(dest_path)
+            else:
+                print ("Skipping `%s'..." % source_path)
+                return
+        else:
+            response = input("Archive '%s' to '%s'? [y/N] " %(dest_path, DOT_ARCHIVE))
+            if response.lower().startswith('y'):
+                archive(dest_path)
+            else:
+                print ("Archiving `%s'..." % dest_path)
+                return
+
+    # Files archived, should be safe to avoid overwriting anything
+    if not dest_path.exists():
+        source_path.symlink_to(dest_path)
+        print ("%s => %s" % (source_path, home_dot_path))
+    else:
+        print("There was an error linking %s" % source_path)
 
 
-def  link():
+def  link(dots_arr, subs_arr):
     for source_dir in SOURCES:
         if source_dir == SOURCE_DOTS:
             print ("Linking dotfiles to ~/ ...")
         else: 
             print ("Linking submodules to ~/ ...")
 
-        os.chdir(os.path.expanduser(source_dir))
-        for filename in [file for file in glob.glob('*') if file not in EXCLUDE]:
-            dotfile = filename
-            if filename not in NO_DOT_PREFIX:
-                dotfile = '.' + dotfile
-            if filename not in PRESERVE_EXTENSION:
-                dotfile = os.path.splitext(dotfile)[0]
-            dotfile = os.path.join(os.path.expanduser('~'), dotfile)
-            source = os.path.join(source_dir, filename).replace('~', '.')
+        # Link dot files
+        for filename in dots_arr:
+            source_dotfile_path = pathlib.Path(SOURCE_DOTS, filename)
+            if source_dotfile_path.exists():
+                home_dot_path = _add_dot(source_dotfile_path)
+                home_dot_path = pathlib.Path(HOME, home_dot_path.name)
 
-            # Check that we aren't overwriting anything
-            if os.path.lexists(dotfile):
-                
-                if os.path.islink(dotfile):
-                    if is_link_to(dotfile, source):
-                        continue
+                _safe_link(source_path=source_dotfile_path, dest_path=home_dot_path)
+            else:
+                print("%s doesnt exist, maybe there is a typo?" %(source_dotfile_path))
 
-                    response = input("Overwrite symbolic link for '%s'? [y/N] " % dotfile)
-                    if not response.lower().startswith('y'):
-                        print ("Skipping `%s'..." % dotfile)
-                        continue
+        # Link sub dirs 
+        for dir_name in subs_arr:
+            source_dir_path = pathlib.Path(SOURCE_SUBS, dir_name)
+            if source_dir_path.exists():
+                dest_path = pathlib.Path(HOME, source_dir_path.stem)
+                _safe_link_to_home(source_path=source_dir_path, dest_path=dest_path)
+            else:
+                print("%s doesnt exist, maybe there is a typo?" %(source_dir_path))
 
-                    force_remove(dotfile)
-                else:
-                    response = input("Archive '%s' to '%s'? [y/N] " %(dotfile, DOT_ARCHIVE))
-                    if not response.lower().startswith('y'):
-                        print ("Archiving `%s'..." % dotfile)
-                        continue
-
-                    archive(dotfile)
-
-            os.symlink(source, dotfile)
-            print ("%s => %s" % (dotfile, source))
+    print("Done linking files")
 
 def unlink():
     if os.path.exists(os.path.expanduser(DOT_ARCHIVE)):
         # TODO: This does not restore dotfiles that were initially symbolic linked to $HOME
-        for source_dir in SOURCES:
-           if source_dir == SOURCE_DOTS:
-               print ("Removing symlinks to dotfiles in ~/ ...")
-           else: 
-               print ("Removing symlinks to submodules in ~/ ...")
 
-           os.chdir(os.path.expanduser(source_dir))
-           for filename in [file for file in glob.glob('*') if file not in EXCLUDE]:
-               dotfile = filename
-               if filename not in NO_DOT_PREFIX:
-                   dotfile = '.' + dotfile
-               if filename not in PRESERVE_EXTENSION:
-                   dotfile = os.path.splitext(dotfile)[0]
-               dotfile = os.path.join(os.path.expanduser('~'), dotfile)
-               source = os.path.join(source_dir, filename).replace('~', '.')
-
-               if os.path.lexists(dotfile):
-                   if os.path.islink(dotfile):
-                       if is_link_to(dotfile, source):
-                           force_remove(dotfile)
-
-        print("Moving archived files back")
-        os.chdir(os.path.expanduser(DOT_ARCHIVE))
-        file_refs = pathlib.Path(".").glob("*")
-        for file_obj in file_refs:
-            archive_path = os.path.join(DOT_ARCHIVE, os.path.basename(str(file_obj)))
-            moved_path = os.path.join(HOME, os.path.basename(str(file_obj)))
-            print ("Moving '%s' back to '%s'" %(archive_path, moved_path))
-            shutil.move(str(file_obj), moved_path)
+        # Remove symlinks in HOME for files in archive, then move archived files back to HOME
+        objects_in_archive = DOT_ARCHIVE.glob("*")
+        for obj in objects_in_archive:
+            home_obj = pathlib.Path(HOME, obj.name)
+            if home_obj.exists():
+                if os.path.islink(home_obj):
+                    #if is_link_to(home_obj, source): TODO
+                    force_remove(home_obj)
+                    # Move original archived object back HOME
+                    print ("Moving '%s' back to '%s'" %(archive_path, moved_path))
+                    shutil.move(obj, home_obj)
+                else:
+                    print("Looks like %s is no longer a symlink. Maybe something changed? You have to manually de-archive this file" % obj)
+            else:
+                print("Looks like %s no longer links to the dotfile directory. Maybe something changed? You have to manually de-archive this file" % obj)
         
         print("Removing dotArchive directory")
         os.rmdir(os.path.expanduser(DOT_ARCHIVE))
@@ -132,15 +138,31 @@ def unlink():
 
 
 def setup():
-    link();
+    print("Files available to link: ")
+    dot_files_included = SOURCE_DOTS.glob("*")
+    for file_obj in dot_files_included:
+        print(file_obj.stem)
 
-    # Test for vim clipboard 
-    if (subprocess.run("vim --version | grep '+clipboards;'", shell=True)).returncode == 1:
-        print("To enable clipboard copy and paste within vim, you must have the +clipboards flag enabled within vim")
+    files_wanted_to_link = input("Which files do you want to link (type filenames with spaces between)? If all, type 'A'\n")
+    arr_files_to_link = files_wanted_to_link.split()
 
-    #subprocess.run("chsh -s $(which zsh)", shell=True, check=True)
-    print("To change your default shell, run: sudo chsh $(which zsh). Remeber you need to restart your shell for this to take effect!")
-    subprocess.run("vim +PluginInstall +qall", shell=True, check=True)
+    print("Directories available to link: ")
+    dot_files_included = SOURCE_SUBS.glob("*")
+    for file_obj in dot_files_included:
+        print(file_obj.stem)
+
+    dirs_wanted_to_link = input("Which directories do you want to link (type names with spaces between)? If all, type 'A'\n")
+    arr_dirs_to_link = files_wanted_to_link.split()
+
+   # link();
+
+   # # Test for vim clipboard 
+   # if (subprocess.run("vim --version | grep '+clipboards;'", shell=True)).returncode == 1:
+   #     print("To enable clipboard copy and paste within vim, you must have the +clipboards flag enabled within vim")
+
+   # #subprocess.run("chsh -s $(which zsh)", shell=True, check=True)
+   # print("To change your default shell, run: sudo chsh $(which zsh). Remeber you need to restart your shell for this to take effect!")
+   # subprocess.run("vim +PluginInstall +qall", shell=True, check=True)
     
 
 def main():
