@@ -110,6 +110,7 @@ def unlink():
     print("Moving archived files back")
     os.chdir(os.path.expanduser(DOT_ARCHIVE))
     for filename in [file for file in glob.glob('*')]:
+        print ("Moving `%s'..." % filename)
         shutil.move(filename, HOME + os.path.basename(dest))
 
 
