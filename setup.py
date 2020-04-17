@@ -75,14 +75,14 @@ def  link():
                     if is_link_to(dotfile, source):
                         continue
 
-                    response = input("Overwrite file `%s'? [y/N] " % dotfile)
+                    response = input("Overwrite symbolic link for '%s'? [y/N] " % dotfile)
                     if not response.lower().startswith('y'):
                         print ("Skipping `%s'..." % dotfile)
                         continue
 
                     force_remove(dotfile)
                 else:
-                    response = input("Archive `%s'? [y/N] " % dotfile)
+                    response = input("Archive '%s' to '%s'? [y/N] " %(dotfile, DOT_ARCHIVE))
                     if not response.lower().startswith('y'):
                         print ("Archiving `%s'..." % dotfile)
                         continue
@@ -93,36 +93,42 @@ def  link():
             print ("%s => %s" % (dotfile, source))
 
 def unlink():
-    for source_dir in SOURCES:
-       if source_dir == SOURCE_DOTS:
-           print ("Removing symlinks to dotfiles in ~/ ...")
-       else: 
-           print ("Removing symlinks to submodules in ~/ ...")
+    if os.path.exists(os.path.expanduser(DOT_ARCHIVE)):
+        # TODO: This does not restore dotfiles that were initially symbolic linked to $HOME
+        for source_dir in SOURCES:
+           if source_dir == SOURCE_DOTS:
+               print ("Removing symlinks to dotfiles in ~/ ...")
+           else: 
+               print ("Removing symlinks to submodules in ~/ ...")
 
-       os.chdir(os.path.expanduser(source_dir))
-       for filename in [file for file in glob.glob('*') if file not in EXCLUDE]:
-           dotfile = filename
-           if filename not in NO_DOT_PREFIX:
-               dotfile = '.' + dotfile
-           if filename not in PRESERVE_EXTENSION:
-               dotfile = os.path.splitext(dotfile)[0]
-           dotfile = os.path.join(os.path.expanduser('~'), dotfile)
-           source = os.path.join(source_dir, filename).replace('~', '.')
+           os.chdir(os.path.expanduser(source_dir))
+           for filename in [file for file in glob.glob('*') if file not in EXCLUDE]:
+               dotfile = filename
+               if filename not in NO_DOT_PREFIX:
+                   dotfile = '.' + dotfile
+               if filename not in PRESERVE_EXTENSION:
+                   dotfile = os.path.splitext(dotfile)[0]
+               dotfile = os.path.join(os.path.expanduser('~'), dotfile)
+               source = os.path.join(source_dir, filename).replace('~', '.')
 
-           if os.path.lexists(dotfile):
-               if os.path.islink(dotfile):
-                   if is_link_to(dotfile, source):
-                       force_remove(dotfile)
+               if os.path.lexists(dotfile):
+                   if os.path.islink(dotfile):
+                       if is_link_to(dotfile, source):
+                           force_remove(dotfile)
 
-    print("Moving archived files back")
-    os.chdir(os.path.expanduser(DOT_ARCHIVE))
-    file_refs = pathlib.Path(".").glob("*")
-    for file_obj in file_refs:
-       print ("Moving `%s'..." % str(file_obj))
-       shutil.move(str(file_obj), HOME + "/" +os.path.basename(str(file_obj)))
-    
-    print("Removing dotArchive directory")
-    os.rmdir(os.path.expanduser(DOT_ARCHIVE))
+        print("Moving archived files back")
+        os.chdir(os.path.expanduser(DOT_ARCHIVE))
+        file_refs = pathlib.Path(".").glob("*")
+        for file_obj in file_refs:
+            archive_path = os.path.join(DOT_ARCHIVE, os.path.basename(str(file_obj)))
+            moved_path = os.path.join(HOME, os.path.basename(str(file_obj)))
+            print ("Moving '%s' back to '%s'" %(archive_path, moved_path))
+            shutil.move(str(file_obj), moved_path)
+        
+        print("Removing dotArchive directory")
+        os.rmdir(os.path.expanduser(DOT_ARCHIVE))
+    else:
+        print(os.path.expanduser(DOT_ARCHIVE) + " Doesnt exist! Maybe you didnt have any dotfiles before setting up?")
 
 
 def setup():
