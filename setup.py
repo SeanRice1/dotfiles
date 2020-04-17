@@ -15,8 +15,7 @@ SOURCES = [SOURCE_DOTS, SOURCE_SUBS]
 DOT_ARCHIVE = HOME + '/.dotArchive/'
 EXCLUDE = [".git", ".gitignore", ".gitmodules"]
 NO_DOT_PREFIX = []
-PRESERVE_EXTENSION = [
-]
+PRESERVE_EXTENSION = []
 
 
 def force_remove(path):
@@ -107,6 +106,12 @@ def unlink():
                     if is_link_to(dotfile, source):
                         force_remove(dotfile)
 
+    print("Moving archived files back")
+    os.chdir(os.path.expanduser(DOT_ARCHIVE))
+    for filename in [file for file in glob.glob('*')]:
+        shutil.move(filename, HOME + os.path.basename(dest))
+
+
 
 def setup():
     link();
@@ -115,9 +120,9 @@ def setup():
     if (subprocess.run("vim --version | grep '+clipboards;'", shell=True)).returncode == 1:
         print("To enable clipboard copy and paste within vim, you must have the +clipboards flag enabled within vim")
 
-    subprocess.run("chsh -s $(which zsh)", shell=True, check=True)
+    #subprocess.run("chsh -s $(which zsh)", shell=True, check=True)
+    print("To change your default shell, run: sudo chsh $(which zsh). Remeber you need to restart your shell for this to take effect!")
     subprocess.run("vim +PluginInstall +qall", shell=True, check=True)
-    print("Logout and log back in for changes to take effect!")
     
 
 def main():
