@@ -134,8 +134,8 @@ def main():
     print("=====================================================================================")
 
     print("OS types: macOS, linux, windows")
-    response = input("Set OS \n")
-    print("This is your OS: " + response.lower())
+    response = input("Please enter which OS you are using: \n")
+    print("OS selected: " + response.lower())
 
     if  response.lower() == "windows":
         print("Sorry windows is not supported yet. Quitting...")
