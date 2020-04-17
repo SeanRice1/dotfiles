@@ -5,6 +5,7 @@ import glob
 import shutil
 import errno
 import subprocess
+import sys
 
 
 HOME= os.path.expanduser('~')
@@ -126,6 +127,11 @@ def setup():
     
 
 def main():
+    # Check python version, requires python 3
+    if sys.version_info < (3, 0):
+            sys.stdout.write("Sorry, requires Python 3.x, not Python 2.x\n")
+            sys.exit(1)
+
     print("======================== Welcome to the dotfile configure-er ========================")
     print("Commands: ")
     print("setup - make sym links within ~/ for all dotfiles and submodules, pre appending a dot. Run setup scripts.")
