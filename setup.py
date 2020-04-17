@@ -7,6 +7,13 @@ import errno
 import subprocess
 import sys
 
+# Check python version, requires python 3
+if sys.version_info < (3, 0):
+        sys.stdout.write("Sorry, requires Python 3.x, not Python 2.x\n")
+        sys.exit(1)
+
+import pathlib
+
 
 HOME= os.path.expanduser('~')
 HOST_OS = None
@@ -87,32 +94,35 @@ def  link():
 
 def unlink():
     for source_dir in SOURCES:
-        if source_dir == SOURCE_DOTS:
-            print ("Removing symlinks to dotfiles in ~/ ...")
-        else: 
-            print ("Removing symlinks to submodules in ~/ ...")
+       if source_dir == SOURCE_DOTS:
+           print ("Removing symlinks to dotfiles in ~/ ...")
+       else: 
+           print ("Removing symlinks to submodules in ~/ ...")
 
-        os.chdir(os.path.expanduser(source_dir))
-        for filename in [file for file in glob.glob('*') if file not in EXCLUDE]:
-            dotfile = filename
-            if filename not in NO_DOT_PREFIX:
-                dotfile = '.' + dotfile
-            if filename not in PRESERVE_EXTENSION:
-                dotfile = os.path.splitext(dotfile)[0]
-            dotfile = os.path.join(os.path.expanduser('~'), dotfile)
-            source = os.path.join(source_dir, filename).replace('~', '.')
+       os.chdir(os.path.expanduser(source_dir))
+       for filename in [file for file in glob.glob('*') if file not in EXCLUDE]:
+           dotfile = filename
+           if filename not in NO_DOT_PREFIX:
+               dotfile = '.' + dotfile
+           if filename not in PRESERVE_EXTENSION:
+               dotfile = os.path.splitext(dotfile)[0]
+           dotfile = os.path.join(os.path.expanduser('~'), dotfile)
+           source = os.path.join(source_dir, filename).replace('~', '.')
 
-            if os.path.lexists(dotfile):
-                if os.path.islink(dotfile):
-                    if is_link_to(dotfile, source):
-                        force_remove(dotfile)
+           if os.path.lexists(dotfile):
+               if os.path.islink(dotfile):
+                   if is_link_to(dotfile, source):
+                       force_remove(dotfile)
 
     print("Moving archived files back")
     os.chdir(os.path.expanduser(DOT_ARCHIVE))
-    for filename in [file for file in glob.glob('*')]:
-        print ("Moving `%s'..." % filename)
-        shutil.move(filename, HOME + os.path.basename(dest))
-
+    file_refs = pathlib.Path(".").glob("*")
+    for file_obj in file_refs:
+       print ("Moving `%s'..." % str(file_obj))
+       shutil.move(str(file_obj), HOME + "/" +os.path.basename(str(file_obj)))
+    
+    print("Removing dotArchive directory")
+    os.rmdir(os.path.expanduser(DOT_ARCHIVE))
 
 
 def setup():
@@ -128,11 +138,6 @@ def setup():
     
 
 def main():
-    # Check python version, requires python 3
-    if sys.version_info < (3, 0):
-            sys.stdout.write("Sorry, requires Python 3.x, not Python 2.x\n")
-            sys.exit(1)
-
     print("======================== Welcome to the dotfile configure-er ========================")
     print("Commands: ")
     print("setup - make sym links within ~/ for all dotfiles and submodules, pre appending a dot. Run setup scripts.")
